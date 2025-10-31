@@ -1,0 +1,48 @@
+{% extends 'OrgDashboard.html' %}
+{% block dashboard_content %}
+
+<div class="row justify-content-center pt-4">
+  <div class="col-12 col-lg-10 mb-4">
+    <div class="card shadow rounded-4 border-0">
+      <div class="card-body p-5">
+        <h3 class="h3 text-center mb-4">Project-wise Employees</h3>
+
+        {% if projEmps %}
+          {% for project, employees in projEmps.items %}
+            <div class="mb-4 p-4 border rounded-3 shadow-sm">
+              <h5 class="fw-bold text-primary mb-3">
+                {{ project|upper }}
+              </h5>
+
+              {% if employees %}
+                <ul class="list-group list-group-flush">
+                  {% for emp in employees %}
+                    <li class="list-group-item">
+                      <i class="bi bi-person-fill text-primary me-2"></i>
+                      {{ emp|title }}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted fst-italic">No employees assigned to this project.</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center">
+            <lottie-player
+              src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
+              background="transparent"
+              speed="1"
+              style="width: 300px; height: 300px;"
+              loop autoplay>
+            </lottie-player>
+            <h4>No projects or employees found.</h4>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

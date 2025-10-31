@@ -1,0 +1,425 @@
+{% extends 'OrgDashboard.html' %}
+{% block dashboard_content %}
+<script src="/static/visuals/echarts.min.js"></script>
+<div class="row justify-content-center pt-4">
+    <div class="col-12 mb-4">
+        <div class="card shadow rounded-4 border-0 p-4">
+            <h3 class="h3 text-center mb-4">View Monitoring PieChart</h3>
+            {% if employees is not none and employees %}
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label class="form-label" for="employeeId">Employee Name</label>
+                        <select name="e_id" class="form-control" id="employeeId">
+                            {% for employee in employees %}
+                            <option value="{{employee.id}}">{{employee.e_name.upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label class="form-label" for="updateDate">Date</label>
+                        <input type="date" name="t_update_date" class="form-control" id="updateDate"> 
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8"> {# Adjusted column to center the chart #}
+                    <div class="card border-light shadow-sm rounded-3">
+                        <div class="card-header text-center">
+                            <h2 class="h5 mb-0">App Usage Breakdown</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="echart_donut" style="height:400px; width: 100%;"></div> {# Adjusted height and width to be responsive #}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center">
+                <lottie-player src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
+                    background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay>
+                </lottie-player>
+                <h3 class="h3 text-center">
+                    No Records Found!
+                </h3>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>   
+    let all_app_names = {{app_names|safe}};
+    let all_app_usage_time = {{app_usage_time|safe}};
+    let all_eids = {{eids|safe}};
+    let all_dates = {{dates|safe}};
+
+    function makePie(){
+        let date = $("#updateDate").val().replace(/-0+/g, '-');
+        let eid = $("#employeeId").val();
+        console.log(date, 'date');
+        console.log(eid, 'eid');
+        let feed_to_chart = [];
+        let app_names_filtered = [];
+        let app_usage_time_filtered = [];
+        for(let i=0; i<all_app_names.length; i++){
+            if(all_dates[i]==date && all_eids[i]==eid){
+                app_names_filtered.push(all_app_names[i]);
+                app_usage_time_filtered.push(all_app_usage_time[i]);
+            }
+        }
+        console.log(app_names_filtered, 'Filtered App Names');
+        for(let i=0; i<app_names_filtered.length; i++){
+            feed_to_chart.push({'value':app_usage_time_filtered[i], 'name':app_names_filtered[i]});
+        }
+        console.log(feed_to_chart);
+
+        // Ensure chart instance exists or initialize it
+        var echartDonut = echarts.getInstanceByDom(document.getElementById('echart_donut'));
+        if (echartDonut === undefined) {
+            echartDonut = echarts.init(document.getElementById('echart_donut'));
+        }
+        
+        var theme = {
+            color: [
+                '#26B99A', '#34495E', '#BDC3C7', '#3498DB',
+                '#9B59B6', '#8abb6f', '#759c6a', '#bfd3b7',
+                '#FBA918', '#EF4683', '#7C3AED', '#4F46E5' // Added more colors from Volt palette
+            ],
+
+            title: {
+                itemGap: 8,
+                textStyle: {
+                    fontWeight: 'normal',
+                    color: '#1F2937' // Use primary text color
+                }
+            },
+
+            tooltip: {
+                backgroundColor: 'rgba(31, 41, 55, 0.8)', // Darker tooltip background
+                textStyle: {
+                    color: '#ffffff' // White text for tooltip
+                },
+                axisPointer: {
+                    type: 'line',
+                    lineStyle: {
+                        color: '#1F2937',
+                        type: 'dashed'
+                    },
+                    crossStyle: {
+                        color: '#1F2937'
+                    },
+                    shadowStyle: {
+                        color: 'rgba(31, 41, 55, 0.3)'
+                    }
+                }
+            },
+
+            legend: { // Custom legend style
+                textStyle: {
+                    color: '#4B5563' // Gray text for legend
+                }
+            },
+
+            toolbox: { // Custom toolbox style
+                iconStyle: {
+                    borderColor: '#4B5563' // Gray border for icons
+                },
+                emphasis: {
+                    iconStyle: {
+                        borderColor: '#1F2937' // Darker border on hover
+                    }
+                }
+            },
+            // ... other theme settings as they were ...
+        };
+        echartDonut.setTheme(theme); // Apply the theme
+
+        echartDonut.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            calculable: true,
+            legend: {
+                x: 'center',
+                y: 'bottom',
+                data:app_names_filtered
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    magicType: {
+                        show: true,
+                        type: ['pie', 'funnel'],
+                        option: {
+                            funnel: {
+                                x: '25%',
+                                width: '50%',
+                                funnelAlign: 'center',
+                                max: 1548
+                            }
+                        }
+                    },
+                    restore: {
+                        show: true,
+                        title: "Restore"
+                    },
+                    saveAsImage: {
+                        show: true,
+                        title: "Save Image"
+                    }
+                }
+            },
+            series: [{
+                name: 'Access to the resource',
+                type: 'pie',
+                radius: ['35%', '55%'],
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true
+                        },
+                        labelLine: {
+                            show: true
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            position: 'center',
+                            textStyle: {
+                                fontSize: '14',
+                                fontWeight: 'normal'
+                            }
+                        }
+                    }
+                },
+                data:feed_to_chart
+            }]
+        });
+    }
+
+    // Set default date to today and trigger initial chart load
+    var today = new Date().toISOString().slice(0, 10);
+    $('#updateDate').val(today);
+    makePie(); // Initial call to draw chart with default values
+
+    $('#updateDate').on('change', function() {  makePie(); });
+    $('#employeeId').on('change', function() {  makePie(); });
+  
+</script> 
+{% comment %} {% extends 'OrgDashboard.html' %}
+{% block dashboard_content %}
+<script src="{% static 'visuals/echarts.min.js' %}"></script>
+<div class="row justify-content-center pt-4">
+    <div class="col-12 mb-4">
+        <div class="card shadow rounded-4 border-0 p-4">
+            <h3 class="h3 text-center mb-4 text-white">View Monitoring PieChart</h3>
+            {% if employees is not none and employees %}
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label class="form-label text-white" for="employeeId">Employee Name</label>
+                        <select name="e_id" class="form-control" id="employeeId">
+                            {% for employee in employees %}
+                            <option value="{{employee.id}}">{{employee.e_name.upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label class="form-label text-white" for="updateDate">Date</label>
+                        <input type="date" name="t_update_date" class="form-control" id="updateDate">
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8"> {# Adjusted column to center the chart #}
+                    <div class="card border-light shadow-sm rounded-3">
+                        <div class="card-header text-center">
+                            <h2 class="h5 mb-0 text-white">App Usage Breakdown</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="echart_donut" style="height:400px; width: 100%;"></div> {# Adjusted height and width to be responsive #}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center text-light-gray">
+                <lottie-player src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
+                    background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay>
+                </lottie-player>
+                <h3 class="h3 text-center text-white">
+                    No Records Found!
+                </h3>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    let all_app_names = {{app_names|safe}};
+    let all_app_usage_time = {{app_usage_time|safe}};
+    let all_eids = {{eids|safe}};
+    let all_dates = {{dates|safe}};
+
+    function makePie(){
+        let date = $("#updateDate").val().replace(/-0+/g, '-');
+        let eid = $("#employeeId").val();
+        console.log(date, 'date');
+        console.log(eid, 'eid');
+        let feed_to_chart = [];
+        let app_names_filtered = [];
+        let app_usage_time_filtered = [];
+        for(let i=0; i<all_app_names.length; i++){
+            if(all_dates[i]==date && all_eids[i]==eid){
+                app_names_filtered.push(all_app_names[i]);
+                app_usage_time_filtered.push(all_app_usage_time[i]);
+            }
+        }
+        console.log(app_names_filtered, 'Filtered App Names');
+        for(let i=0; i<app_names_filtered.length; i++){
+            feed_to_chart.push({'value':app_usage_time_filtered[i], 'name':app_names_filtered[i]});
+        }
+        console.log(feed_to_chart);
+
+        // Ensure chart instance exists or initialize it
+        var echartDonut = echarts.getInstanceByDom(document.getElementById('echart_donut'));
+        if (echartDonut === undefined) {
+            echartDonut = echarts.init(document.getElementById('echart_donut'));
+        }
+
+        var theme = {
+            color: [
+                '#26B99A', '#34495E', '#BDC3C7', '#3498DB',
+                '#9B59B6', '#8abb6f', '#759c6a', '#bfd3b7',
+                '#FBA918', '#EF4683', '#7C3AED', '#4F46E5' // Added more colors from Volt palette
+            ],
+
+            title: {
+                itemGap: 8,
+                textStyle: {
+                    fontWeight: 'normal',
+                    color: 'var(--text-dark-on-light)' // Use primary text color
+                }
+            },
+
+            tooltip: {
+                backgroundColor: 'rgba(31, 41, 55, 0.8)', // Darker tooltip background
+                textStyle: {
+                    color: 'var(--text-white)' // White text for tooltip
+                },
+                axisPointer: {
+                    type: 'line',
+                    lineStyle: {
+                        color: 'var(--text-dark-on-light)',
+                        type: 'dashed'
+                    },
+                    crossStyle: {
+                        color: 'var(--text-dark-on-light)'
+                    },
+                    shadowStyle: {
+                        color: 'rgba(31, 41, 55, 0.3)'
+                    }
+                }
+            },
+
+            legend: { // Custom legend style
+                textStyle: {
+                    color: 'var(--text-light-gray)' // Gray text for legend
+                }
+            },
+
+            toolbox: { // Custom toolbox style
+                iconStyle: {
+                    borderColor: 'var(--text-light-gray)' // Gray border for icons
+                },
+                emphasis: {
+                    iconStyle: {
+                        borderColor: 'var(--text-dark-on-light)' // Darker border on hover
+                    }
+                }
+            },
+            // ... other theme settings as they were ...
+        };
+        echartDonut.setTheme(theme); // Apply the theme
+
+        echartDonut.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            calculable: true,
+            legend: {
+                x: 'center',
+                y: 'bottom',
+                data:app_names_filtered
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    magicType: {
+                        show: true,
+                        type: ['pie', 'funnel'],
+                        option: {
+                            funnel: {
+                                x: '25%',
+                                width: '50%',
+                                funnelAlign: 'center',
+                                max: 1548
+                            }
+                        }
+                    },
+                    restore: {
+                        show: true,
+                        title: "Restore"
+                    },
+                    saveAsImage: {
+                        show: true,
+                        title: "Save Image"
+                    }
+                }
+            },
+            series: [{
+                name: 'Access to the resource',
+                type: 'pie',
+                radius: ['35%', '55%'],
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true
+                        },
+                        labelLine: {
+                            show: true
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            position: 'center',
+                            textStyle: {
+                                fontSize: '14',
+                                fontWeight: 'normal'
+                            }
+                        }
+                    }
+                },
+                data:feed_to_chart
+            }]
+        });
+    }
+
+    // Set default date to today and trigger initial chart load
+    var today = new Date().toISOString().slice(0, 10);
+    $('#updateDate').val(today);
+    makePie(); // Initial call to draw chart with default values
+
+    $('#updateDate').on('change', function() {  makePie(); });
+    $('#employeeId').on('change', function() {  makePie(); });
+
+</script>
+ {% endcomment %}

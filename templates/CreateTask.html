@@ -1,0 +1,153 @@
+{% extends 'OrgDashboard.html' %}
+{% block dashboard_content %}
+<div class="row justify-content-center pt-4">
+  <div class="col-12 col-md-8 col-lg-6 mb-4">
+    <div class="card shadow rounded-4 border-0">
+      <div class="card-body p-5">
+        <h3 class="h3 text-center mb-4">Create Task</h3>
+
+        {% if boards and projects and employees %}
+        <div class="d-flex justify-content-center mb-4">
+          <img class="img-fluid" src="/static/html/assets/img/undraw_Add_tasks_re_s5yj.png" alt="Add Tasks Illustration" style="max-width: 300px; height: auto;">
+        </div>
+
+        <form action="/create-task" method="POST">
+          {% csrf_token %}
+          <div class="form-group mb-3">
+            <label class="form-label" for="taskName">Task Name</label>
+            <input type="text" name="t_name" class="form-control" id="taskName" placeholder="Enter Task name" required>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="taskDesc">Task Description</label>
+            <textarea name="t_desc" class="form-control" id="taskDesc" rows="6" placeholder="Enter Task Description" required></textarea>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="taskPriority">Task Priority:</label>
+            <select name="t_priority" class="form-control" id="taskPriority" required>
+              <option value="High Priority">High Priority</option>
+              <option value="Medium Priority">Medium Priority</option>
+              <option value="Low Priority">Low Priority</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="projectId">Project Name:</label>
+            <select name="p_id" class="form-control" id="projectId" required>
+              <option value="0" selected>Select Project</option>
+              {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.p_name|upper }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="boardId">Board Name:</label>
+            <select name="b_id" class="form-control" id="boardId" required>
+              {% for board in boards %}
+                <option value="{{ board.id }}">{{ board.b_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="employeeId">Employee Name:</label>
+            <select name="e_id" class="form-control" id="employeeId" required>
+              <option value="">Select Employee</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label" for="assignDate">Task Assigned Date</label>
+            <input type="date" name="t_assign_date" class="form-control" id="assignDate" value="{{ today }}" required>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label" for="deadlineDate">Task Deadline Date</label>
+            <input type="date" name="t_deadline_date" class="form-control" id="deadlineDate" required>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Create Task</button>
+          </div>
+        </form>
+
+        {% else %}
+        <div class="text-center">
+          <lottie-player
+            src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
+            background="transparent"
+            speed="1"
+            style="width: 300px; height: 300px;"
+            loop autoplay>
+          </lottie-player>
+          <h3 class="h3 text-center">
+            For creating a task, you should have at least one project, one board, and one employee.
+          </h3>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function () {
+  $('#projectId').change(function () {
+    const pid = $('#projectId').val();
+    console.log("Selected project ID:", pid);
+
+    $('#employeeId').empty();
+    $('#employeeId').append('<option value="">Loading...</option>');
+
+    if (!pid || pid === "0") {
+      $('#employeeId').html('<option value="">Select Employee</option>');
+      return;
+    }
+
+    const request_url = '/get_emps_by_project/' + pid;
+
+    $.ajax({
+      url: request_url,
+      type: 'GET',
+      dataType: 'json',
+      success: function (data) {
+        console.log("Employees in project:", data);
+        $('#employeeId').empty();
+
+        if (!Array.isArray(data)) {
+          $('#employeeId').append('<option value="">Error: Invalid data format</option>');
+          console.error("Expected list but got:", data);
+          return;
+        }
+
+        if (data.length === 0) {
+          $('#employeeId').append('<option value="">No employees assigned to this project</option>');
+          return;
+        }
+
+        $('#employeeId').append('<option value="">Select Employee</option>');
+        data.forEach(function (emp) {
+          if (emp.id && emp.name) {
+            $('#employeeId').append('<option value="' + emp.id + '">' + emp.name + '</option>');
+          }
+        });
+      },
+      error: function (xhr, status, error) {
+        console.error("AJAX error:", error);
+        $('#employeeId').html('<option value="">Failed to load employees</option>');
+      }
+    });
+  });
+
+  // Set today's date as min deadline
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const formatted = `${yyyy}-${mm}-${dd}`;
+  document.getElementById("deadlineDate").setAttribute("min", formatted);
+});
+</script>
+{% endblock %}

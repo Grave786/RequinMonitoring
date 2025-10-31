@@ -1,0 +1,40 @@
+{% extends 'EmpDashboard.html' %}
+{% block dashboard_content  %} {# CHANGED THIS LINE #}
+<div class="container py-5"> {# Added py-5 for vertical padding #}
+    <div class="row justify-content-center"> {# Using row justify-content-center for horizontal centering #}
+        <div class="col-12 col-md-10 col-lg-8"> {# Adjusted column size for better responsiveness #}
+            <div class="card shadow rounded-4 border-0 p-4 p-lg-5"> {# Consistent card styling #}
+                <div class="d-flex justify-content-center mb-4"> {# Centering Lottie player #}
+                    <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json" background="transparent"
+                        speed="1" style="width: 300px; height: 250px;" loop autoplay></lottie-player> {# Adjusted size slightly for consistency #}
+                </div>
+                <div class="text-center"> {# Centered text content #}
+                    <h4 class="mb-2 text-gray-700">Welcome to MyRemoteDesk</h4> {# Adjusted text color and margin #}
+                    <h1 class="display-4 fw-bolder text-primary">{{request.session.u_name|upper}}</h1> {# Larger, bolder welcome message #}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
+{% comment %} {% extends 'EmpDashboard.html' %}
+{% block dashboard_content  %} {# CHANGED THIS LINE #}
+<div class="container py-5"> {# Added py-5 for vertical padding #}
+    <div class="row justify-content-center"> {# Using row justify-content-center for horizontal centering #}
+        <div class="col-12 col-md-10 col-lg-8"> {# Adjusted column size for better responsiveness #}
+            <div class="card shadow rounded-4 border-0 p-4 p-lg-5"> {# Consistent card styling #}
+                <div class="d-flex justify-content-center mb-4"> {# Centering Lottie player #}
+                    <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json" background="transparent"
+                        speed="1" style="width: 300px; height: 250px;" loop autoplay></lottie-player> {# Adjusted size slightly for consistency #}
+                </div>
+                <div class="text-center"> {# Centered text content #}
+                    <h4 class="mb-2 text-light-gray">Welcome to MyRemoteDesk</h4> {# Adjusted text color and margin #}
+                    <h1 class="display-4 fw-bolder text-primary">{{request.session.u_name|upper}}</h1> {# Larger, bolder welcome message #}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+ {% endcomment %}
