@@ -106,9 +106,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'requin_solution_db',     
-        'USER': 'root',           
-        'PASSWORD': '',        
-        'HOST': 'localhost',
+        'USER': 'requin_user',           
+        'PASSWORD': 'Requin@monitor',        
+        'HOST': '43.206.111.130',
         'PORT': '3306',
     }
 }

@@ -1210,6 +1210,44 @@ def del_proj(request, pid):
 #         return render(request, 'SelectMoniEmp.html', {"msg": emp_details})
 
 
+# @privileged_access_required
+# @permission_required('view_app_web_logs')
+# def view_app_web(request):
+#     current_org_id = None
+#     if request.custom_user.is_org():
+#         current_org_id = request.custom_user.id
+#     elif request.custom_user.is_emp():
+#         current_org_id = request.custom_user.o_id_id
+    
+#     if not current_org_id:
+#         messages.error(request, "Failed to determine organization context. Please re-authenticate.")
+#         return redirect('/LoginOrg')
+
+#     if request.method == 'POST':
+#         e_id = request.POST['e_id']
+#         m_date = request.POST['date_log']
+        
+#         m_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
+#         # FIX: Ensure YYYY-MM-DD format without platform-specific modifiers
+#         m_date_f2 = m_date_f1.strftime('%Y-%m-%d') # Changed from '%Y-%#m-%#d'
+
+#         # Debug prints
+#         print(f"DEBUG (view_app_web): Filtering for e_id={e_id}, o_id={current_org_id}, date='{m_date_f2}'")
+        
+#         moni_details = Monitoring.objects.filter(
+#             o_id_id=current_org_id,
+#             e_id_id=e_id,
+#             m_log_ts__startswith=m_date_f2
+#         ).exclude(m_title="").values()
+
+#         print(f"DEBUG (view_app_web): Found {len(moni_details)} records.")
+#         if moni_details:
+#             print(f"DEBUG (view_app_web): First record m_title: {moni_details[0]['m_title']}, m_log_ts: {moni_details[0]['m_log_ts']}")
+
+#         return render(request, 'ViewMoniLogs.html', {"msg": moni_details})
+#     else: # GET request
+#         emp_details = Employee.objects.filter(o_id_id=current_org_id).values()
+#         return render(request, 'SelectMoniEmp.html', {"msg": emp_details})
 @privileged_access_required
 @permission_required('view_app_web_logs')
 def view_app_web(request):
@@ -1226,27 +1264,25 @@ def view_app_web(request):
     if request.method == 'POST':
         e_id = request.POST['e_id']
         m_date = request.POST['date_log']
-        
+
         m_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
-        # FIX: Ensure YYYY-MM-DD format without platform-specific modifiers
-        m_date_f2 = m_date_f1.strftime('%Y-%m-%d') # Changed from '%Y-%#m-%#d'
+        m_date_f2 = m_date_f1.strftime('%Y-%m-%d')
 
-        # Debug prints
-        print(f"DEBUG (view_app_web): Filtering for e_id={e_id}, o_id={current_org_id}, date='{m_date_f2}'")
-        
-        moni_details = Monitoring.objects.filter(
-            o_id_id=current_org_id,
-            e_id_id=e_id,
-            m_log_ts__startswith=m_date_f2
-        ).exclude(m_title="").values()
+        # ✅ FIX: use select_related instead of values()
+        moni_details = (
+            Monitoring.objects
+            .filter(o_id_id=current_org_id, e_id_id=e_id, m_log_ts__startswith=m_date_f2)
+            .exclude(m_title="")
+            .select_related('e_id')   # <-- allows access to e_id.e_name
+            .order_by('-m_log_ts')
+        )
 
-        print(f"DEBUG (view_app_web): Found {len(moni_details)} records.")
-        if moni_details:
-            print(f"DEBUG (view_app_web): First record m_title: {moni_details[0]['m_title']}, m_log_ts: {moni_details[0]['m_log_ts']}")
+        print(f"DEBUG: Found {moni_details.count()} monitoring records for e_id={e_id}")
 
         return render(request, 'ViewMoniLogs.html', {"msg": moni_details})
-    else: # GET request
-        emp_details = Employee.objects.filter(o_id_id=current_org_id).values()
+
+    else:  # GET request
+        emp_details = Employee.objects.filter(o_id_id=current_org_id)
         return render(request, 'SelectMoniEmp.html', {"msg": emp_details})
 
 
@@ -2160,9 +2196,79 @@ def logDashboard(request):
 
 
 
+# @privileged_access_required
+# @permission_required('view_attendance')
+# def org_view_attendance(request):
+#     current_org_id = None
+#     if request.custom_user.is_org():
+#         current_org_id = request.custom_user.id
+#     elif request.custom_user.is_emp():
+#         current_org_id = request.custom_user.o_id_id
+    
+#     if not current_org_id:
+#         messages.error(request, "Failed to determine organization context. Please re-authenticate.")
+#         return redirect('/LoginOrg')
+
+#     try:
+#         emp_details = Employee.objects.filter(o_id_id=current_org_id).values()
+#         if request.method=='POST':
+#             e_id = request.POST['e_id']
+#             m_date = request.POST['date_log']
+            
+#             m_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
+#             # FIX: Ensure YYYY-MM-DD format without platform-specific modifiers
+#             m_date_f2 = m_date_f1.strftime('%Y-%m-%d') # Changed from '%Y-%#m-%#d'
+
+#             # Debug prints
+#             print(f"DEBUG (org_view_attendance): Filtering for e_id={e_id}, o_id={current_org_id}, date='{m_date_f2}'")
+
+#             # Note: a_date field in AttendanceLogs should be YYYY-MM-DD from Electron app
+#             attendance_logs_query = AttendanceLogs.objects.filter(o_id_id=current_org_id, e_id_id=e_id, a_date=m_date_f2)
+
+#             print(f"DEBUG (org_view_attendance): Found {attendance_logs_query.count()} attendance records for query.")
+
+#             if not attendance_logs_query.exists():
+#                 messages.error(request, "No attendance records found for the selected employee and date.")
+#                 return render(request, 'Attendance.html', {"msg": emp_details})
+
+#             # Since a_date is YYYY-MM-DD, a simple .first() on values_list for a_date, ip etc. is sufficient
+#             attendance_logs = attendance_logs_query.values_list('a_date','a_ip_address','a_time_zone','a_lat','a_long').first()
+#             logged_in_time_qs = attendance_logs_query.filter(a_status='1').values_list('a_time')
+#             logged_out_time_qs = attendance_logs_query.filter(a_status='0').values_list('a_time')
+
+#             logged_in_time = logged_in_time_qs.first()[0] if logged_in_time_qs.exists() else None
+#             logged_out_time = logged_out_time_qs.first()[0] if logged_out_time_qs.exists() else None
+
+#             if logged_in_time and logged_out_time:
+#                 logged_in_dt = datetime.datetime.fromtimestamp(int(logged_in_time))
+#                 logged_out_dt = datetime.datetime.fromtimestamp(int(logged_out_time))
+#                 total_time_logged = logged_out_dt - logged_in_dt
+#                 logged_in_time_formatted = logged_in_dt.strftime('%H:%M:%S')
+#                 logged_out_time_formatted = logged_out_dt.strftime('%H:%M:%S')
+#             else:
+#                 total_time_logged = "N/A"
+#                 logged_in_time_formatted = "N/A"
+#                 logged_out_time_formatted = "N/A"
+
+#             context = {
+#                 "msg": emp_details,
+#                 'attendance_logs': list(attendance_logs),
+#                 'logged_in_time': logged_in_time_formatted,
+#                 'logged_out_time': logged_out_time_formatted,
+#                 'total_time_logged': total_time_logged
+#             }
+#             return render(request, 'Attendance.html', context)
+#         else: # GET request
+#             return render(request, 'Attendance.html', {"msg": emp_details})
+#     except Exception as e:
+#         messages.error(request,f"Data not found or some error was occurred: {e}")
+#         # This redirect might hide the root cause in some cases, consider removing it for debugging.
+#         return HttpResponseRedirect('/org-view-attendance')
+
 @privileged_access_required
 @permission_required('view_attendance')
 def org_view_attendance(request):
+    import datetime
     current_org_id = None
     if request.custom_user.is_org():
         current_org_id = request.custom_user.id
@@ -2173,30 +2279,72 @@ def org_view_attendance(request):
         messages.error(request, "Failed to determine organization context. Please re-authenticate.")
         return redirect('/LoginOrg')
 
+    emp_details = Employee.objects.filter(o_id_id=current_org_id).values()
+
     try:
-        emp_details = Employee.objects.filter(o_id_id=current_org_id).values()
-        if request.method=='POST':
-            e_id = request.POST['e_id']
-            m_date = request.POST['date_log']
-            
-            m_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
-            # FIX: Ensure YYYY-MM-DD format without platform-specific modifiers
-            m_date_f2 = m_date_f1.strftime('%Y-%m-%d') # Changed from '%Y-%#m-%#d'
+        if request.method == 'POST':
+            mode = request.POST.get('mode')  # "org" or "emp"
+            m_date = request.POST.get('date_log')
+            m_date_f2 = datetime.datetime.strptime(m_date, '%Y-%m-%d').strftime('%Y-%m-%d')
 
-            # Debug prints
-            print(f"DEBUG (org_view_attendance): Filtering for e_id={e_id}, o_id={current_org_id}, date='{m_date_f2}'")
+            # 🔹 MODE 1: Organization-wide Attendance
+            if mode == 'org':
+                org_logs = (
+                    AttendanceLogs.objects
+                    .filter(o_id_id=current_org_id, a_date=m_date_f2)
+                    .select_related('e_id')
+                    .order_by('e_id__e_name', 'a_time')
+                )
 
-            # Note: a_date field in AttendanceLogs should be YYYY-MM-DD from Electron app
-            attendance_logs_query = AttendanceLogs.objects.filter(o_id_id=current_org_id, e_id_id=e_id, a_date=m_date_f2)
+                org_summary = []
+                for emp in emp_details:
+                    emp_logs = org_logs.filter(e_id_id=emp['id'])
+                    if not emp_logs.exists():
+                        continue
 
-            print(f"DEBUG (org_view_attendance): Found {attendance_logs_query.count()} attendance records for query.")
+                    logins = emp_logs.filter(a_status='1').order_by('a_time')
+                    logouts = emp_logs.filter(a_status='0').order_by('-a_time')
+
+                    login_time = (
+                        datetime.datetime.fromtimestamp(int(logins.first().a_time)).strftime('%H:%M:%S')
+                        if logins.exists() else 'N/A'
+                    )
+                    logout_time = (
+                        datetime.datetime.fromtimestamp(int(logouts.first().a_time)).strftime('%H:%M:%S')
+                        if logouts.exists() else 'N/A'
+                    )
+
+                    total_time = (
+                        datetime.datetime.fromtimestamp(int(logouts.first().a_time)) -
+                        datetime.datetime.fromtimestamp(int(logins.first().a_time))
+                    ) if logins.exists() and logouts.exists() else "N/A"
+
+                    org_summary.append({
+                        'employee': emp['e_name'],
+                        'login': login_time,
+                        'logout': logout_time,
+                        'date': m_date_f2,
+                        'total': total_time if total_time != "N/A" else "N/A"
+                    })
+
+                return render(request, 'Attendance.html', {
+                    'msg': emp_details,
+                    'mode': 'org',
+                    'm_date': m_date_f2,
+                    'org_summary': org_summary
+                })
+
+            # 🔹 MODE 2: Specific Employee
+            e_id = request.POST.get('e_id')
+            attendance_logs_query = AttendanceLogs.objects.filter(
+                o_id_id=current_org_id, e_id_id=e_id, a_date=m_date_f2
+            )
 
             if not attendance_logs_query.exists():
                 messages.error(request, "No attendance records found for the selected employee and date.")
                 return render(request, 'Attendance.html', {"msg": emp_details})
 
-            # Since a_date is YYYY-MM-DD, a simple .first() on values_list for a_date, ip etc. is sufficient
-            attendance_logs = attendance_logs_query.values_list('a_date','a_ip_address','a_time_zone','a_lat','a_long').first()
+            attendance_logs = attendance_logs_query.values_list('a_date', 'a_ip_address', 'a_time_zone', 'a_lat', 'a_long').first()
             logged_in_time_qs = attendance_logs_query.filter(a_status='1').values_list('a_time')
             logged_out_time_qs = attendance_logs_query.filter(a_status='0').values_list('a_time')
 
@@ -2216,19 +2364,19 @@ def org_view_attendance(request):
 
             context = {
                 "msg": emp_details,
+                "mode": "emp",
                 'attendance_logs': list(attendance_logs),
                 'logged_in_time': logged_in_time_formatted,
                 'logged_out_time': logged_out_time_formatted,
                 'total_time_logged': total_time_logged
             }
             return render(request, 'Attendance.html', context)
-        else: # GET request
+
+        else:
             return render(request, 'Attendance.html', {"msg": emp_details})
     except Exception as e:
-        messages.error(request,f"Data not found or some error was occurred: {e}")
-        # This redirect might hide the root cause in some cases, consider removing it for debugging.
-        return HttpResponseRedirect('/org-view-attendance')
-
+        messages.error(request, f"Error occurred: {e}")
+        return render(request, 'Attendance.html', {"msg": emp_details})
 
 # @user_login_required # Employee's own attendance, no specific permission needed
 # def user_view_attendance(request):

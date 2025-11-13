@@ -1,155 +1,181 @@
 {% extends 'OrgDashboard.html' %}
 {% block dashboard_content %}
-<div class="row justify-content-center pt-4">
-    <div class="col-12 col-md-8 col-lg-6 mb-4">
-        <div class="card shadow rounded-4 border-0">
-            <div class="card-body p-5">
-                <h3 class="text-center mb-4">View Attendance</h3>
-                <div class="d-flex justify-content-center mb-4">
-                    <lottie-player src="https://assets5.lottiefiles.com/packages/lf20_9chjsupe.json"
-                        background="transparent" speed="1" style="width: 300px; height: 250px;" loop autoplay>
-                    </lottie-player>
-                </div>
-                <form action="/org-view-attendance" method="POST">
-                    {% csrf_token %}
-                    <div class="mb-4">
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="employeeSelect">Choose Employee:</label>
-                            <select class="form-control" id="employeeSelect" name="e_id" required>
-                                {% for test1 in msg %}
-                                <option value={{test1.id}}>{{test1.e_name.upper}}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group mb-4">
-                            <label class="form-label" for="dateLog">Date:</label>
-                            <input type="date" name="date_log" class="form-control" id="dateLog" value='2022-03-17' required>
-                        </div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">View</button>
-                    </div>
-                </form>
 
-                {% if attendance_logs is not none and attendance_logs %}
-                <div class="mt-5"> {# Add some top margin for separation from the form #}
-                    <div class="card border-light shadow-sm rounded-3 p-4"> {# Use a card for the log details #}
-                        <h4 class="h5 mb-3">Attendance Details</h4>
-                        <ul class="list-group list-group-flush"> {# Use a list group for structured details #}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Date:</strong> <span>{{attendance_logs.0}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Login at:</strong> <span>{{logged_in_time}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Logout at:</strong> <span>{{logged_out_time}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>IP Address:</strong> <span>{{attendance_logs.1}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Timezone:</strong> <span>{{attendance_logs.2}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Latitude/Longitude:</strong> <span>{{attendance_logs.3}} / {{attendance_logs.4}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <strong>Total time logged in:</strong> <span>{{total_time_logged}} hours</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center mt-5"> {# Add top margin for separation #}
-                    <lottie-player src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
-                        background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay>
-                    </lottie-player>
-                    <h3 class="h3 text-center">
-                        No Records Found!
-                    </h3>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %} 
-{% comment %} {% extends 'OrgDashboard.html' %}
-{% block dashboard_content %}
 <div class="row justify-content-center pt-4">
-    <div class="col-12 col-md-8 col-lg-6 mb-4">
-        <div class="card shadow rounded-4 border-0">
-            <div class="card-body p-5">
-                <h3 class="text-center mb-4 text-white">View Attendance</h3>
-                <div class="d-flex justify-content-center mb-4">
-                    <lottie-player src="https://assets5.lottiefiles.com/packages/lf20_9chjsupe.json"
-                        background="transparent" speed="1" style="width: 300px; height: 250px;" loop autoplay>
-                    </lottie-player>
-                </div>
-                <form action="/org-view-attendance" method="POST">
-                    {% csrf_token %}
-                    <div class="mb-4">
-                        <div class="form-group mb-3">
-                            <label class="form-label text-white" for="employeeSelect">Choose Employee:</label>
-                            <select class="form-control" id="employeeSelect" name="e_id" required>
-                                {% for test1 in msg %}
-                                <option value={{test1.id}}>{{test1.e_name.upper}}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group mb-4">
-                            <label class="form-label text-white" for="dateLog">Date:</label>
-                            <input type="date" name="date_log" class="form-control" id="dateLog" value='2022-03-17' required>
-                        </div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">View</button>
-                    </div>
-                </form>
+  <div class="col-12 mb-4">
+    <div class="card shadow rounded-4 border-0">
+      <div class="card-body p-5">
+        <h3 class="text-center mb-4">View Attendance</h3>
 
-                {% if attendance_logs is not none and attendance_logs %}
-                <div class="mt-5"> {# Add some top margin for separation from the form #}
-                    <div class="card border-light shadow-sm rounded-3 p-4"> {# Use a card for the log details #}
-                        <h4 class="h5 mb-3 text-white">Attendance Details</h4>
-                        <ul class="list-group list-group-flush"> {# Use a list group for structured details #}
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Date:</strong> <span>{{attendance_logs.0}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Login at:</strong> <span>{{logged_in_time}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Logout at:</strong> <span>{{logged_out_time}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>IP Address:</strong> <span>{{attendance_logs.1}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Timezone:</strong> <span>{{attendance_logs.2}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Latitude/Longitude:</strong> <span>{{attendance_logs.3}} / {{attendance_logs.4}}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light-gray">
-                                <strong>Total time logged in:</strong> <span>{{total_time_logged}} hours</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center mt-5 text-light-gray"> {# Add top margin for separation #}
-                    <lottie-player src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
-                        background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay>
-                    </lottie-player>
-                    <h3 class="h3 text-center text-white">
-                        No Records Found!
-                    </h3>
-                </div>
-                {% endif %}
-            </div>
+        <div class="d-flex justify-content-center mb-4">
+          <lottie-player
+            src="https://assets5.lottiefiles.com/packages/lf20_9chjsupe.json"
+            background="transparent"
+            speed="1"
+            style="width: 300px; height: 250px;"
+            loop autoplay>
+          </lottie-player>
         </div>
+
+        <!-- 🔘 Attendance Filter Form -->
+        <form action="/org-view-attendance" method="POST">
+          {% csrf_token %}
+          <div class="mb-4">
+            <div class="form-group mb-3 text-center">
+              <label class="form-label fw-bold">Select Mode:</label><br>
+              <input type="radio" name="mode" value="emp" id="empMode" checked>
+              <label for="empMode" class="me-3">Employee Wise</label>
+              <input type="radio" name="mode" value="org" id="orgMode">
+              <label for="orgMode">Organization Wise</label>
+            </div>
+
+            <div id="empSelectWrapper">
+              <div class="form-group mb-3">
+                <label class="form-label" for="employeeSelect">Choose Employee:</label>
+                <select class="form-control" id="employeeSelect" name="e_id" required>
+                  {% for test1 in msg %}
+                  <option value="{{ test1.id }}">{{ test1.e_name|upper }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label" for="dateLog">Select Date:</label>
+              <input type="date" name="date_log" class="form-control" id="dateLog" required>
+            </div>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill">View</button>
+          </div>
+        </form>
+
+        <!-- 👤 EMPLOYEE-WISE ATTENDANCE -->
+        {% if mode == 'emp' and attendance_logs %}
+        <div class="mt-5">
+          <div class="card border-light shadow-sm rounded-3 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="h5 mb-0">Employee Attendance Details</h4>
+            </div>
+
+            <table id="employeeTable" class="table table-striped table-bordered align-middle">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Login</th>
+                  <th>Logout</th>
+                  <th>IP</th>
+                  <th>Timezone</th>
+                  <th>Latitude</th>
+                  <th>Longitude</th>
+                  <th>Total Time (hours)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ attendance_logs.0 }}</td>
+                  <td>{{ logged_in_time }}</td>
+                  <td>{{ logged_out_time }}</td>
+                  <td>{{ attendance_logs.1 }}</td>
+                  <td>{{ attendance_logs.2 }}</td>
+                  <td>{{ attendance_logs.3 }}</td>
+                  <td>{{ attendance_logs.4 }}</td>
+                  <td>{{ total_time_logged }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 🏢 ORGANIZATION-WIDE ATTENDANCE -->
+        {% if mode == 'org' and org_summary %}
+        <div class="mt-5">
+          <div class="card border-light shadow-sm rounded-3 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="h5 mb-0 text-center">Organization Attendance — {{ m_date }}</h4>
+            </div>
+
+            <div class="table-responsive">
+              <table id="orgTable" class="table table-hover table-bordered mb-0 rounded align-middle">
+                <thead class="table-light">
+                  <tr class="text-center">
+                    <th>#</th>
+                    <th>Employee</th>
+                    <th>Login</th>
+                    <th>Logout</th>
+                    <th>Total Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for log in org_summary %}
+                  <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>{{ log.employee }}</td>
+                    <td class="text-center">{{ log.login }}</td>
+                    <td class="text-center">{{ log.logout }}</td>
+                    <td class="text-center">{{ log.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ❌ NO RECORD FOUND -->
+        {% if not org_summary and not attendance_logs %}
+        <div class="text-center mt-5">
+          <lottie-player
+            src="https://assets7.lottiefiles.com/datafiles/vhvOcuUkH41HdrL/data.json"
+            background="transparent"
+            speed="1"
+            style="width: 300px; height: 300px;"
+            loop autoplay>
+          </lottie-player>
+          <h3 class="h3 text-center mt-3">No Records Found!</h3>
+        </div>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
+
+<!-- 🔧 Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Toggle employee selection
+  const empSelectWrapper = document.getElementById("empSelectWrapper");
+  const empMode = document.getElementById("empMode");
+  const orgMode = document.getElementById("orgMode");
+
+  empMode.addEventListener("change", () => empSelectWrapper.style.display = "block");
+  orgMode.addEventListener("change", () => empSelectWrapper.style.display = "none");
+
+  // Initialize DataTables with export buttons
+  if ($('#orgTable').length) {
+    $('#orgTable').DataTable({
+      dom: 'Bfrtip',
+      buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+      pageLength: 25,
+      order: [[1, 'asc']]
+    });
+  }
+
+  if ($('#employeeTable').length) {
+    $('#employeeTable').DataTable({
+      dom: 'Bfrtip',
+      buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+      paging: false,
+      searching: false,
+      info: false
+    });
+  }
+});
+</script>
+
+
+
 {% endblock %}
- {% endcomment %}
